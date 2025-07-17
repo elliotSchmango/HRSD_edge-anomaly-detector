@@ -8,44 +8,49 @@ class JetsonGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Jetson Anomaly Detector")
-        self.root.geometry("1920x1080")
-        self.root.configure(bg="black")
+        self.root.geometry("800x480")
+        self.root.configure(bg="white")
 
         self.font = ("DejaVu Sans", 20)
         self.title_font = ("DejaVu Sans", 36)
 
-        self.title_label = tk.Label(self.root, text="System Mode", font=self.title_font, fg="white", bg="black")
+        self.title_label = tk.Label(self.root, text="System Mode", font=self.title_font, fg="black", bg="white")
         self.title_label.pack(pady=30)
 
-        #Frame to hold buttons horizontally
-        self.button_frame = tk.Frame(self.root, bg="black")
+        self.button_frame = tk.Frame(self.root, bg="white")
         self.button_frame.pack(pady=20)
 
-        self.calib_icon = PhotoImage(file=os.path.join("icons", "calibration.png"))
-        self.sentry_icon = PhotoImage(file=os.path.join("icons", "sentry.png"))
-        self.update_icon = PhotoImage(file=os.path.join("icons", "update.png"))
+        def load_icon(filename):
+            try:
+                return PhotoImage(file=os.path.join("icons", filename))
+            except Exception as e:
+                print(f"[Warning] Could not load {filename}: {e}")
+                return None
 
-        #Rounded buttons with icons
-        self.calib_btn = tk.Button(self.button_frame, text=" Calibration ", font=self.font, command=self.start_calibration,
-                                   width=10, height=2, image=self.calib_icon, compound="top", relief="flat",
-                                   bg="#1f1f1f", fg="white", bd=0, highlightthickness=0, padx=20, pady=10)
+        self.calib_icon = load_icon("calibration.png")
+        self.sentry_icon = load_icon("sentry.png")
+        self.update_icon = load_icon("update.png")
+
+        # Helper to create buttons with or without icons
+        def create_button(parent, text, command, icon):
+            return tk.Button(parent, text=f" {text} ", font=self.font, command=command,
+                             width=10, height=2, image=icon, compound="top", relief="flat",
+                             bg="white", fg="black", bd=0, highlightthickness=0, padx=20, pady=10)
+
+        self.calib_btn = create_button(self.button_frame, "Calibration", self.start_calibration, self.calib_icon)
         self.calib_btn.pack(side="left", padx=20)
 
-        self.sentry_btn = tk.Button(self.button_frame, text=" Sentry ", font=self.font, command=self.start_sentry,
-                                    width=10, height=2, image=self.sentry_icon, compound="top", relief="flat",
-                                    bg="#1f1f1f", fg="white", bd=0, highlightthickness=0, padx=20, pady=10)
+        self.sentry_btn = create_button(self.button_frame, "Sentry", self.start_sentry, self.sentry_icon)
         self.sentry_btn.pack(side="left", padx=20)
 
-        self.update_btn = tk.Button(self.button_frame, text=" Update ", font=self.font, command=self.update_mode,
-                                    width=10, height=2, image=self.update_icon, compound="top", relief="flat",
-                                    bg="#1f1f1f", fg="white", bd=0, highlightthickness=0, padx=20, pady=10)
+        self.update_btn = create_button(self.button_frame, "Update", self.update_mode, self.update_icon)
         self.update_btn.pack(side="left", padx=20)
 
-        self.status_label = tk.Label(self.root, text="Idle", font=self.font, fg="green", bg="black")
+        self.status_label = tk.Label(self.root, text="Idle", font=self.font, fg="green", bg="white")
         self.status_label.pack(pady=30)
 
     def start_calibration(self):
-        self.status_label.config(text="Calibrating...", fg="yellow")
+        self.status_label.config(text="Calibrating...", fg="orange")
         Thread(target=self.calibration_loop, daemon=True).start()
 
     def calibration_loop(self):
