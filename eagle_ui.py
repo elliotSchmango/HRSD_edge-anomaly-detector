@@ -1,0 +1,57 @@
+import tkinter as tk
+from threading import Thread
+import time
+
+class JetsonGUI:
+    def __init__(self):
+        self.root = tk.Tk()
+        self.root.title("Jetson Anomaly Detector")
+        self.root.geometry("1920x1080")
+        self.root.configure(bg="black")
+
+        self.title_label = tk.Label(self.root, text="System Mode", font=("Helvetica", 36), fg="white", bg="black")
+        self.title_label.pack(pady=40)
+
+        self.calib_btn = tk.Button(self.root, text="Calibration Mode", font=("Helvetica", 24), command=self.start_calibration, width=20, height=2)
+        self.calib_btn.pack(pady=10)
+
+        self.sentry_btn = tk.Button(self.root, text="Sentry Mode", font=("Helvetica", 24), command=self.start_sentry, width=20, height=2)
+        self.sentry_btn.pack(pady=10)
+
+        self.update_btn = tk.Button(self.root, text="Update Mode", font=("Helvetica", 24), command=self.update_mode, width=20, height=2)
+        self.update_btn.pack(pady=10)
+
+        self.status_label = tk.Label(self.root, text="Idle", font=("Helvetica", 20), fg="green", bg="black")
+        self.status_label.pack(pady=30)
+
+    def start_calibration(self):
+        self.status_label.config(text="Calibrating...", fg="yellow")
+        Thread(target=self.calibration_loop, daemon=True).start()
+
+    def calibration_loop(self):
+        #Placeholder for capturing images across zones
+        for zone in range(9):
+            print(f"[Calibration] Scanning zone {zone}...")
+            time.sleep(0.5)  #placeholder for scan
+        print("[Calibration] Complete.")
+        self.status_label.config(text="Calibration Complete", fg="green")
+
+    def start_sentry(self):
+        self.status_label.config(text="Sentry Mode Active", fg="red")
+        Thread(target=self.sentry_loop, daemon=True).start()
+
+    def sentry_loop(self):
+        for _ in range(9):
+            print("[Sentry] Scanning...")
+            time.sleep(1) #placeholder for continuous scan and inference
+        self.status_label.config(text="Sentry Complete", fg="green")
+
+    def update_mode(self):
+        self.status_label.config(text="Update Mode (Not Implemented)", fg="gray")
+
+    def run(self):
+        self.root.mainloop()
+
+if __name__ == "__main__":
+    app = JetsonGUI()
+    app.run()
