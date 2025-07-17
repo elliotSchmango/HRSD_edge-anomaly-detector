@@ -27,9 +27,9 @@ class JetsonGUI:
                 print(f"[Warning] Could not load {filename}: {e}")
                 return None
 
-        self.calib_icon = load_icon("calibration.png")
-        self.sentry_icon = load_icon("sentry.png")
-        self.update_icon = load_icon("update.png")
+        self.calib_icon = load_icon("icons/calibration.png")
+        self.sentry_icon = load_icon("icons/sentry.png")
+        self.update_icon = load_icon("icons/update.png")
 
         # Helper to create buttons with or without icons
         def create_button(parent, text, command, icon):
