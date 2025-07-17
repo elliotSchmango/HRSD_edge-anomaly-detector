@@ -1,6 +1,8 @@
 import tkinter as tk
+from tkinter import PhotoImage
 from threading import Thread
 import time
+import os
 
 class JetsonGUI:
     def __init__(self):
@@ -9,19 +11,37 @@ class JetsonGUI:
         self.root.geometry("1920x1080")
         self.root.configure(bg="black")
 
-        self.title_label = tk.Label(self.root, text="System Mode", font=("Helvetica", 36), fg="white", bg="black")
-        self.title_label.pack(pady=40)
+        self.font = ("DejaVu Sans", 20)
+        self.title_font = ("DejaVu Sans", 36)
 
-        self.calib_btn = tk.Button(self.root, text="Calibration Mode", font=("Helvetica", 24), command=self.start_calibration, width=20, height=2)
-        self.calib_btn.pack(pady=10)
+        self.title_label = tk.Label(self.root, text="System Mode", font=self.title_font, fg="white", bg="black")
+        self.title_label.pack(pady=30)
 
-        self.sentry_btn = tk.Button(self.root, text="Sentry Mode", font=("Helvetica", 24), command=self.start_sentry, width=20, height=2)
-        self.sentry_btn.pack(pady=10)
+        #Frame to hold buttons horizontally
+        self.button_frame = tk.Frame(self.root, bg="black")
+        self.button_frame.pack(pady=20)
 
-        self.update_btn = tk.Button(self.root, text="Update Mode", font=("Helvetica", 24), command=self.update_mode, width=20, height=2)
-        self.update_btn.pack(pady=10)
+        self.calib_icon = PhotoImage(file=os.path.join("icons", "calibration.png"))
+        self.sentry_icon = PhotoImage(file=os.path.join("icons", "sentry.png"))
+        self.update_icon = PhotoImage(file=os.path.join("icons", "update.png"))
 
-        self.status_label = tk.Label(self.root, text="Idle", font=("Helvetica", 20), fg="green", bg="black")
+        #Rounded buttons with icons
+        self.calib_btn = tk.Button(self.button_frame, text=" Calibration ", font=self.font, command=self.start_calibration,
+                                   width=10, height=2, image=self.calib_icon, compound="top", relief="flat",
+                                   bg="#1f1f1f", fg="white", bd=0, highlightthickness=0, padx=20, pady=10)
+        self.calib_btn.pack(side="left", padx=20)
+
+        self.sentry_btn = tk.Button(self.button_frame, text=" Sentry ", font=self.font, command=self.start_sentry,
+                                    width=10, height=2, image=self.sentry_icon, compound="top", relief="flat",
+                                    bg="#1f1f1f", fg="white", bd=0, highlightthickness=0, padx=20, pady=10)
+        self.sentry_btn.pack(side="left", padx=20)
+
+        self.update_btn = tk.Button(self.button_frame, text=" Update ", font=self.font, command=self.update_mode,
+                                    width=10, height=2, image=self.update_icon, compound="top", relief="flat",
+                                    bg="#1f1f1f", fg="white", bd=0, highlightthickness=0, padx=20, pady=10)
+        self.update_btn.pack(side="left", padx=20)
+
+        self.status_label = tk.Label(self.root, text="Idle", font=self.font, fg="green", bg="black")
         self.status_label.pack(pady=30)
 
     def start_calibration(self):
@@ -29,10 +49,9 @@ class JetsonGUI:
         Thread(target=self.calibration_loop, daemon=True).start()
 
     def calibration_loop(self):
-        #Placeholder for capturing images across zones
         for zone in range(9):
             print(f"[Calibration] Scanning zone {zone}...")
-            time.sleep(0.5)  #placeholder for scan
+            time.sleep(0.5)
         print("[Calibration] Complete.")
         self.status_label.config(text="Calibration Complete", fg="green")
 
@@ -43,7 +62,7 @@ class JetsonGUI:
     def sentry_loop(self):
         for _ in range(9):
             print("[Sentry] Scanning...")
-            time.sleep(1) #placeholder for continuous scan and inference
+            time.sleep(1)
         self.status_label.config(text="Sentry Complete", fg="green")
 
     def update_mode(self):
