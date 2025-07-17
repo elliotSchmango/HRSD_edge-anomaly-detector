@@ -8,7 +8,7 @@ class JetsonGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Jetson Anomaly Detector")
-        self.root.geometry("800x480")
+        self.root.geometry("1920x1080")
         self.root.configure(bg="white")
 
         self.font = ("DejaVu Sans", 20)
