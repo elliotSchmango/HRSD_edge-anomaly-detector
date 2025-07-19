@@ -61,15 +61,9 @@ class JetsonGUI:
         self.status_label = tk.Label(self.root, text="Idle", font=self.font, fg="green", bg="white")
         self.status_label.pack(pady=50)
 
-    def start_calibration(self):
-        self.status_label.config(text="Calibrating...", fg="orange")
-        Thread(target=self.calibration_loop, daemon=True).start()
-
     def calibration_loop(self):
-        for zone in range(9):
-            print(f"[Calibration] Scanning zone {zone}...")
-            time.sleep(0.5)
-        print("[Calibration] Complete.")
+        import subprocess
+        subprocess.run(["python3", "calibration/calibrate.py"])
         self.status_label.config(text="Calibration Complete", fg="green")
 
     def start_sentry(self):
