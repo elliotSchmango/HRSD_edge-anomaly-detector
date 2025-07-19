@@ -1,6 +1,7 @@
 import os
 import cv2
 import time
+import random
 from adafruit_servokit import ServoKit
 
 #settings
@@ -8,8 +9,9 @@ NUM_ZONES = 9
 FRAMES_PER_ZONE = 30
 SAVE_PATH = "calibration/data"
 CAMERA_INDEX = 0
+SAMPLE_RATE = 6  # every 6 frames, choose one at random
 
-#servo config for SunFounder Pan/Tilt using PCA9685
+#Servo config for SunFounder Pan/Tilt using PCA9685
 kit = ServoKit(channels=16)
 PAN_CHANNEL = 0
 TILT_CHANNEL = 1
@@ -30,23 +32,31 @@ def move_to_zone(zone_index):
     print(f"[Servo] Moving to zone {zone_index} → pan={pan}, tilt={tilt}")
     kit.servo[PAN_CHANNEL].angle = pan
     kit.servo[TILT_CHANNEL].angle = tilt
-    time.sleep(1.2)
+    time.sleep(1.2)  #Buffered time for movement to complete
 
 def capture_frames_for_zone(cap, zone_index):
     zone_dir = os.path.join(SAVE_PATH, f"zone_{zone_index}")
     os.makedirs(zone_dir, exist_ok=True)
 
-    for i in range(FRAMES_PER_ZONE):
+    total_frames = FRAMES_PER_ZONE * SAMPLE_RATE
+    selected_indices = sorted(random.sample(range(total_frames), FRAMES_PER_ZONE))
+
+    frame_id = 0
+    saved = 0
+    while saved < FRAMES_PER_ZONE:
         ret, frame = cap.read()
         if not ret:
-            print(f"[Error] Failed to capture frame for zone {zone_index}, frame {i}")
+            print(f"[Error] Failed to capture frame {frame_id} in zone {zone_index}")
             continue
 
-        filename = os.path.join(zone_dir, f"frame_{i:03d}.png")
-        resized = cv2.resize(frame, (128, 128))
-        cv2.imwrite(filename, resized)
-        print(f"Saved {filename}")
-        time.sleep(0.1)
+        if frame_id in selected_indices:
+            filename = os.path.join(zone_dir, f"frame_{saved:03d}.png")
+            cv2.imwrite(filename, frame)  # save full resolution
+            print(f"Saved {filename}")
+            saved += 1
+
+        frame_id += 1
+        time.sleep(0.03)  # ~30fps input, this approximates natural capture rate
 
 def main():
     cap = cv2.VideoCapture(CAMERA_INDEX)
