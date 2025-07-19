@@ -26,8 +26,8 @@ class JetsonGUI:
             try:
                 path = os.path.join("icons", filename)
                 if os.path.exists(path):
-                    img = Image.open(path).convert("RGBA").resize((160, 160))
-                    background = Image.new("RGBA", img.size, (220, 220, 220, 255))
+                    img = Image.open(path).convert("RGBA").resize((180, 180))
+                    background = Image.new("RGBA", img.size, (255, 255, 225, 255))
                     combined = Image.alpha_composite(background, img)
                     return ImageTk.PhotoImage(combined)
                 else:
