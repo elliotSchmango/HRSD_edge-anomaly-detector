@@ -58,7 +58,7 @@ def capture_frames_for_zone(cap, zone_index):
         frame_id += 1
         time.sleep(0.03)  # ~30fps input, this approximates natural capture rate
 
-def main():
+def run_calibration():
     cap = cv2.VideoCapture(CAMERA_INDEX)
     if not cap.isOpened():
         print("[Error] Cannot open camera.")
@@ -71,6 +71,9 @@ def main():
 
     cap.release()
     print("[Done] Calibration complete.")
+
+def main():
+    run_calibration()
 
 if __name__ == "__main__":
     main()
