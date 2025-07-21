@@ -1,2 +1,9 @@
-calibration/data
+# virtual environment
 venv/
+
+# Ignore calibration and model artifacts
+calibration/data/
+*.pth
+*.onnx
+*.engine
+__pycache__/
