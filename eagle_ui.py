@@ -26,8 +26,8 @@ class JetsonGUI:
             try:
                 path = os.path.join("icons", filename)
                 if os.path.exists(path):
-                    img = Image.open(path).convert("RGBA").resize((180, 180))
-                    background = Image.new("RGBA", img.size, (255, 255, 225, 255))
+                    img = Image.open(path).convert("RGBA").resize((160, 160))
+                    background = Image.new("RGBA", img.size, (220, 220, 220, 255))
                     combined = Image.alpha_composite(background, img)
                     return ImageTk.PhotoImage(combined)
                 else:
@@ -55,7 +55,7 @@ class JetsonGUI:
         self.sentry_widget = create_icon_label(self.button_frame, self.sentry_icon, "Sentry", self.start_sentry)
         self.sentry_widget.pack(side="left", padx=60)
 
-        self.update_widget = create_icon_label(self.button_frame, self.update_icon, "Update", self.update_mode)
+        self.update_widget = create_icon_label(self.button_frame, self.update_icon, "Train", self.update_mode)
         self.update_widget.pack(side="left", padx=60)
 
         self.status_label = tk.Label(self.root, text="Idle", font=self.font, fg="green", bg="white")
@@ -67,7 +67,7 @@ class JetsonGUI:
 
     def calibration_loop(self):
         import subprocess
-        subprocess.run(["python3", "calibration/calibrate.py"])
+        subprocess.run(["python3", "calibration/calibrate_mac.py"])
         self.status_label.config(text="Calibration Complete", fg="green")
 
     def start_sentry(self):
@@ -81,7 +81,13 @@ class JetsonGUI:
         self.status_label.config(text="Sentry Complete", fg="green")
 
     def update_mode(self):
-        self.status_label.config(text="Update Mode (Not Implemented)", fg="gray")
+        self.status_label.config(text="Training model...", fg="orange")
+        Thread(target=self.training_loop, daemon=True).start()
+
+    def training_loop(self):
+        import subprocess
+        subprocess.run(["python3", "models/autoencoder/train_autoencoder.py"])
+        self.status_label.config(text="Training Complete", fg="green")
 
     def run(self):
         self.root.mainloop()
