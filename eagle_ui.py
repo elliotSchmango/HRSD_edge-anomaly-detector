@@ -75,9 +75,8 @@ class JetsonGUI:
         Thread(target=self.sentry_loop, daemon=True).start()
 
     def sentry_loop(self):
-        for _ in range(9):
-            print("[Sentry] Scanning...")
-            time.sleep(1)
+        import subprocess
+        subprocess.run(["python3", "sentry/sentry_loop.py"])
         self.status_label.config(text="Sentry Complete", fg="green")
 
     def update_mode(self):
