@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout, QHBoxLayout
 )
 from PyQt5.QtGui import QFont, QIcon, QFontDatabase
-from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize
+from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QTimer
 
 
 class Worker(QThread):
@@ -27,6 +27,7 @@ class JetsonUI(QWidget):
         self.setWindowTitle("HRSD EAGLE Interface")
         self.setGeometry(100, 100, 1280, 800)
         self.setStyleSheet("background-color: white;")
+        self.sentry_process = None  # Track running state
 
         # Fonts
         self.title_font = QFont(font_name, 32, QFont.Bold)
@@ -71,31 +72,35 @@ class JetsonUI(QWidget):
         title_layout.addStretch()
         title_layout.addLayout(exit_layout)
 
-        # Horizontal icon buttons layout (lowered down)
+        # Horizontal icon buttons
         self.button_row = QHBoxLayout()
         self.button_row.setSpacing(60)
         self.button_row.setContentsMargins(100, 60, 100, 20)
 
         self.calib_button = self.create_icon_button("Calibration", "calibration.png", self.start_calibration)
         self.train_button = self.create_icon_button("Train", "update.png", self.start_training)
-        self.sentry_button = self.create_icon_button("Sentry", "sentry.png", self.start_sentry)
+        self.sentry_button = self.create_icon_button("Sentry", "sentry.png", self.toggle_sentry)
 
         self.button_row.addWidget(self.calib_button)
         self.button_row.addWidget(self.train_button)
         self.button_row.addWidget(self.sentry_button)
 
         # Status bar
-        self.status = QLabel("Idle")
+        self.status = QLabel("Sentry Mode Off")
         self.status.setFont(self.status_font)
         self.status.setStyleSheet("color: green; background-color: white;")
         self.status.setAlignment(Qt.AlignCenter)
 
-        # layout
+        # Periodic file polling
+        self.status_timer = QTimer()
+        self.status_timer.timeout.connect(self.update_status_from_file)
+        self.status_timer.start(1000)
+
+        # Layout
         layout = QVBoxLayout()
         layout.addLayout(title_layout)
         layout.addSpacing(60)
 
-        # Secondary static caption
         self.static_caption = QLabel("Available Modes")
         self.static_caption.setFont(QFont(font_name, 30, QFont.Bold))
         self.static_caption.setStyleSheet("color: black;")
@@ -138,6 +143,19 @@ class JetsonUI(QWidget):
         btn.setFixedSize(200, 220)
         return btn
 
+    def toggle_sentry(self):
+        if self.sentry_process is None or self.sentry_process.poll() is not None:
+            # Start sentry mode
+            self.status.setText("Sentry Mode Active")
+            self.status.setStyleSheet("color: blue; background-color: white;")
+            self.sentry_process = subprocess.Popen(["python3", "sentry/sentry_loop.py"])
+        else:
+            # Stop sentry mode
+            self.status.setText("Stopping Sentry...")
+            self.status.setStyleSheet("color: red; background-color: white;")
+            with open("sentry_stop.txt", "w") as f:
+                f.write("stop")
+
     def start_calibration(self):
         self.status.setText("Calibrating...")
         self.status.setStyleSheet("color: orange;")
@@ -152,18 +170,21 @@ class JetsonUI(QWidget):
         self.worker.finished.connect(lambda _: self.status.setText("Training Complete"))
         self.worker.start()
 
-    def start_sentry(self):
-        self.status.setText("Sentry Mode Active — Monitoring...")
-        self.status.setStyleSheet("color: blue;")
-        self.worker = Worker(["python3", "sentry/sentry_loop.py"])
-        self.worker.finished.connect(lambda _: self.status.setText("Sentry Complete"))
-        self.worker.start()
+    def update_status_from_file(self):
+        try:
+            with open("status_zone.txt", "r") as f:
+                status = f.read().strip()
+                self.status.setText(status)
+        except FileNotFoundError:
+            # Only show "off" if sentry isn't running
+            if self.sentry_process is None or self.sentry_process.poll() is not None:
+                self.status.setText("Sentry Mode Off")
+                self.status.setStyleSheet("color: green; background-color: white;")
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    # Safe font loading
     font_path = os.path.join(os.path.dirname(__file__), "fonts", "Manrope-Regular.ttf")
     if os.path.exists(font_path):
         font_id = QFontDatabase.addApplicationFont(font_path)
