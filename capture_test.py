@@ -1,17 +1,18 @@
 import cv2
 
+# Try default camera index (0); change to 1 or 2 if needed
 cap = cv2.VideoCapture(0)
-ret, raw = cap.read()
-cap.release()
 
-if not ret:
-    print("❌ Failed to capture frame.")
+if not cap.isOpened():
+    print("[Error] Could not open camera.")
     exit(1)
 
-# Convert YUYV to BGR
-try:
-    bgr = cv2.cvtColor(raw, cv2.COLOR_YUV2BGR_YUY2)
-    cv2.imwrite("converted_yuyv.jpg", bgr)
-    print("✅ Saved converted_yuyv.jpg (color-corrected)")
-except Exception as e:
-    print(f"❌ Failed to convert YUYV: {e}")
+ret, frame = cap.read()
+if not ret:
+    print("[Error] Failed to grab frame.")
+    exit(1)
+
+cv2.imwrite("test_image.jpg", frame)
+print("[Success] Saved test_image.jpg")
+
+cap.release()
