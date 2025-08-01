@@ -10,3 +10,5 @@ __pycache__/
 
 #sentry result csvs
 *.csv
+
+classifier_data/
