@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import (
 from PyQt5.QtGui import QFont, QIcon, QFontDatabase
 from PyQt5.QtCore import Qt, QThread, pyqtSignal, QSize, QTimer
 
-
 class Worker(QThread):
     finished = pyqtSignal(str)
 
@@ -20,14 +19,12 @@ class Worker(QThread):
         subprocess.run(self.command)
         self.finished.emit("complete")
 
-
 class JetsonUI(QWidget):
     def __init__(self, font_name):
         super().__init__()
         self.setWindowTitle("HRSD EAGLE Interface")
         self.setGeometry(100, 100, 1280, 800)
         self.setStyleSheet("background-color: white;")
-        self.sentry_process = None  # Track running state
 
         # Fonts
         self.title_font = QFont(font_name, 32, QFont.Bold)
@@ -72,7 +69,7 @@ class JetsonUI(QWidget):
         title_layout.addStretch()
         title_layout.addLayout(exit_layout)
 
-        # Horizontal icon buttons
+        # Horizontal icon buttons layout
         self.button_row = QHBoxLayout()
         self.button_row.setSpacing(60)
         self.button_row.setContentsMargins(100, 60, 100, 20)
@@ -86,12 +83,12 @@ class JetsonUI(QWidget):
         self.button_row.addWidget(self.sentry_button)
 
         # Status bar
-        self.status = QLabel("Sentry Mode Off")
+        self.status = QLabel("Idle")
         self.status.setFont(self.status_font)
         self.status.setStyleSheet("color: green; background-color: white;")
         self.status.setAlignment(Qt.AlignCenter)
 
-        # Periodic file polling
+        # Timer for dynamic caption updates
         self.status_timer = QTimer()
         self.status_timer.timeout.connect(self.update_status_from_file)
         self.status_timer.start(1000)
@@ -112,6 +109,9 @@ class JetsonUI(QWidget):
         layout.addWidget(self.status)
         layout.addSpacing(30)
         self.setLayout(layout)
+
+        self.sentry_running = False
+        self.sentry_process = None
 
     def create_icon_button(self, label, icon_file, handler):
         btn = QToolButton()
@@ -143,23 +143,10 @@ class JetsonUI(QWidget):
         btn.setFixedSize(200, 220)
         return btn
 
-    def toggle_sentry(self):
-        if self.sentry_process is None or self.sentry_process.poll() is not None:
-            # Start sentry mode
-            self.status.setText("Sentry Mode Active")
-            self.status.setStyleSheet("color: blue; background-color: white;")
-            self.sentry_process = subprocess.Popen(["python3", "sentry/sentry_loop.py"])
-        else:
-            # Stop sentry mode
-            self.status.setText("Stopping Sentry...")
-            self.status.setStyleSheet("color: red; background-color: white;")
-            with open("sentry_stop.txt", "w") as f:
-                f.write("stop")
-
     def start_calibration(self):
         self.status.setText("Calibrating...")
         self.status.setStyleSheet("color: orange;")
-        self.worker = Worker(["python3", "calibration/calibrate_mac.py"])
+        self.worker = Worker(["python3", "calibration/calibrate.py"])
         self.worker.finished.connect(lambda _: self.status.setText("Calibration Complete"))
         self.worker.start()
 
@@ -170,17 +157,30 @@ class JetsonUI(QWidget):
         self.worker.finished.connect(lambda _: self.status.setText("Training Complete"))
         self.worker.start()
 
+    def toggle_sentry(self):
+        if not self.sentry_running:
+            self.status.setText("Sentry Mode Active — Monitoring...")
+            self.status.setStyleSheet("color: blue;")
+            self.sentry_process = subprocess.Popen(["python3", "sentry/sentry_loop.py"])
+            self.sentry_running = True
+        else:
+            if self.sentry_process:
+                self.sentry_process.terminate()
+                self.sentry_process = None
+            self.status.setText("Sentry Mode Stopped")
+            self.status.setStyleSheet("color: orange;")
+            self.sentry_running = False
+
     def update_status_from_file(self):
         try:
             with open("status_zone.txt", "r") as f:
                 status = f.read().strip()
-                self.status.setText(status)
+                if self.sentry_running:
+                    self.status.setText(f"[Sentry ON] {status}")
+                else:
+                    self.status.setText(f"[Sentry OFF] {status}")
         except FileNotFoundError:
-            # Only show "off" if sentry isn't running
-            if self.sentry_process is None or self.sentry_process.poll() is not None:
-                self.status.setText("Sentry Mode Off")
-                self.status.setStyleSheet("color: green; background-color: white;")
-
+            pass
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
