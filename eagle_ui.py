@@ -1,6 +1,7 @@
 import sys
 import os
 import subprocess
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QToolButton, QPushButton,
     QVBoxLayout, QHBoxLayout
@@ -74,9 +75,9 @@ class JetsonUI(QWidget):
         self.button_row.setSpacing(60)
         self.button_row.setContentsMargins(100, 60, 100, 20)
 
-        self.calib_button = self.create_icon_button("Calibration", "calibration.png", self.start_calibration)
-        self.train_button = self.create_icon_button("Train", "update.png", self.start_training)
-        self.sentry_button = self.create_icon_button("Sentry", "sentry.png", self.toggle_sentry)
+        self.calib_button = self.create_icon_button("Calibration", os.path.join("static", "icons", "calibration.png"), self.start_calibration)
+        self.train_button = self.create_icon_button("Train", os.path.join("static", "icons", "update.png"), self.start_training)
+        self.sentry_button = self.create_icon_button("Sentry", os.path.join("static", "icons", "sentry.png"), self.toggle_sentry)
 
         self.button_row.addWidget(self.calib_button)
         self.button_row.addWidget(self.train_button)
@@ -113,9 +114,8 @@ class JetsonUI(QWidget):
         self.sentry_running = False
         self.sentry_process = None
 
-    def create_icon_button(self, label, icon_file, handler):
+    def create_icon_button(self, label, icon_path, handler):
         btn = QToolButton()
-        icon_path = os.path.join("icons", icon_file)
         if os.path.exists(icon_path):
             btn.setIcon(QIcon(icon_path))
             btn.setIconSize(QSize(192, 192))
@@ -185,7 +185,7 @@ class JetsonUI(QWidget):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    font_path = os.path.join(os.path.dirname(__file__), "fonts", "Manrope-Regular.ttf")
+    font_path = os.path.join(os.path.dirname(__file__), "static", "fonts", "Manrope-Regular.ttf")
     if os.path.exists(font_path):
         font_id = QFontDatabase.addApplicationFont(font_path)
         if font_id != -1:

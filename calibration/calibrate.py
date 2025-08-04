@@ -1,6 +1,8 @@
 import cv2
 import os
 import time
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from hardware.zone_controller import move_to_zone
 
 SAVE_PATH = "calibration/data"

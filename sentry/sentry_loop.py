@@ -4,6 +4,8 @@ import time
 import numpy as np
 import onnxruntime as ort
 from datetime import datetime
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from hardware.zone_controller import move_to_zone
 
 # Config
