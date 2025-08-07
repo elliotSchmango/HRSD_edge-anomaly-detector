@@ -1,37 +1,45 @@
-import time
-import board
-import busio
 from adafruit_pca9685 import PCA9685
+from board import SCL, SDA
+import busio
+import time
 
-# Setup I2C and PCA9685
-i2c = busio.I2C(board.SCL, board.SDA)
+# Initialize I2C and PCA9685
+i2c = busio.I2C(SCL, SDA)
 pca = PCA9685(i2c)
-pca.frequency = 60 #60 hz polling rate for servos
+pca.frequency = 50  # Standard servo frequency
 
-# Convert angle (0–180) to 16-bit duty cycle for MG996R servos
-def angle_to_duty(angle):
-    min_duty = 150  # pulse for 0°s
-    max_duty = 600  # pulse for 180°
-    pulse = int(min_duty + (angle / 180.0) * (max_duty - min_duty))
-    return pulse << 4  # convert to 16-bit
+# Define pan/tilt channels and pulse mappings
+PAN_CHANNEL = 0
+TILT_CHANNEL = 1
 
-# Define 3x3 zone angles with overlap
-zone_angles = {
-    0: (45, 60),   # Top-left
-    1: (90, 60),   # Top-center
-    2: (135, 60),  # Top-right
-    3: (45, 90),   # Mid-left
-    4: (90, 90),   # Mid-center
-    5: (135, 90),  # Mid-right
-    6: (45, 120),  # Bottom-left
-    7: (90, 120),  # Bottom-center
-    8: (135, 120)  # Bottom-right
+# Zone angles with overlap (you can fine-tune these)
+ZONE_ANGLES = {
+    1: (60, 120),   # (pan, tilt)
+    2: (90, 120),
+    3: (120, 120),
+    4: (60, 90),
+    5: (90, 90),
+    6: (120, 90),
+    7: (60, 60),
+    8: (90, 60),
+    9: (120, 60)
 }
 
-# Move camera to specific zone (pan: channel 0, tilt: channel 1)
-def move_to_zone(zone_id, pan_channel=0, tilt_channel=1):
-    pan_angle, tilt_angle = zone_angles[zone_id]
-    pca.channels[pan_channel].duty_cycle = angle_to_duty(pan_angle)
-    pca.channels[tilt_channel].duty_cycle = angle_to_duty(tilt_angle)
-    print(f"[Servo] Moved to zone {zone_id} → pan: {pan_angle}°, tilt: {tilt_angle}°")
-    time.sleep(0.5)  # wait for servo to stabilize
+def angle_to_pwm(angle):
+    """Convert angle (0–180) to PWM pulse (min=150, max=600)"""
+    return int((angle / 180.0) * 450 + 150)
+
+def move_to_zone(zone_id):
+    """Move to the given zone ID (1–9)"""
+    if zone_id not in ZONE_ANGLES:
+        raise ValueError(f"Invalid zone: {zone_id}")
+    pan_angle, tilt_angle = ZONE_ANGLES[zone_id]
+    pca.channels[PAN_CHANNEL].duty_cycle = angle_to_pwm(pan_angle)
+    pca.channels[TILT_CHANNEL].duty_cycle = angle_to_pwm(tilt_angle)
+    print(f"[ZoneController] Moving to Zone {zone_id}: Pan={pan_angle}, Tilt={tilt_angle}")
+    time.sleep(1.0)  # Delay to allow servo movement
+
+def cleanup():
+    """Stop all PWM signals (optional at exit)"""
+    pca.channels[PAN_CHANNEL].duty_cycle = 0
+    pca.channels[TILT_CHANNEL].duty_cycle = 0
