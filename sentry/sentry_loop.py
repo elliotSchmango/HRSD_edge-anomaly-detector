@@ -14,7 +14,7 @@ THRESHOLD = 0.01
 RESULTS_PATH = "sentry_results/sentry_log.csv"
 STATUS_FILE = "status_zone.txt"
 MODEL_PATH = "models/autoencoder/autoencoder.onnx"
-CLASSIFIER_PATH = "models/classifier.onnx"
+CLASSIFIER_PATH = "models/classifier/classifier.onnx"
 
 # Load models
 ae_session = ort.InferenceSession(MODEL_PATH)

@@ -11,6 +11,7 @@ pandas==2.3.1
 scikit-image
 requests==2.32.4
 pyserial==3.5
+smbus==0.5.0
 
 # Adafruit Libraries
 Adafruit-Blinka==8.62.0
