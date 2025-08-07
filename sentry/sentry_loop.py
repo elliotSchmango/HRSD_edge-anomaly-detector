@@ -63,7 +63,7 @@ print("[Sentry] Starting persistent scan loop...")
 
 try:
     while True:
-        for zone_id in range(9):
+        for zone_id in range(1, 10):
             move_to_zone(zone_id)
             time.sleep(0.5)
 
